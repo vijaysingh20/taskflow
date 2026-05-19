@@ -78,6 +78,10 @@ REDIS_URL=redis://localhost:6379
 JWT_SECRET=<64-byte hex string>
 ```
 
+## Git
+
+- Do not add `Co-Authored-By: Claude` or any Claude attribution to commit messages.
+
 ## Conventions
 
 - `strict: true` is enforced — no implicit `any`, no unchecked nulls
