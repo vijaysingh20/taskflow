@@ -3,11 +3,19 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "lint-staged": {
+    "**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "husky"
   },
   "keywords": [],
@@ -31,15 +39,10 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5",
     "prettier": "^3.8.3",
+    "prisma": "^7.8.0",
     "tsc-alias": "^1.8.17",
     "tsx": "^4.22.1",
     "typescript": "^6.0.3"
-  },
-  "lint-staged": {
-    "**/*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ]
   },
   "dependencies": {
     "express": "^5.2.1",
