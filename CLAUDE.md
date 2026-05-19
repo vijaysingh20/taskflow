@@ -5,9 +5,14 @@ TaskFlow — a real-time project management platform (think mini Jira/Linear). B
 ## Commands
 
 ```bash
-pnpm dev          # Start dev server with hot reload (tsx watch)
-pnpm build        # Compile TypeScript to dist/
-pnpm start        # Run compiled output (production)
+pnpm dev                            # Start dev server with hot reload (tsx watch)
+pnpm build                          # Compile TypeScript to dist/ (tsc + tsc-alias)
+pnpm start                          # Run compiled output (production)
+pnpm lint                           # Run ESLint across src/
+pnpm format                         # Run Prettier across src/
+pnpm prisma migrate dev --name <n>  # Create and apply a new migration
+pnpm prisma studio                  # Open Prisma Studio at localhost:5555
+pnpm prisma validate                # Validate schema without connecting to DB
 ```
 
 ## Architecture
@@ -41,7 +46,37 @@ Controllers must not contain business logic. Services must not import from other
 
 ### Path aliases
 
-`@/*` maps to `src/*`. Use `@/features/tasks` not `../../features/tasks`. Both `tsconfig.json` paths and `tsconfig-paths` are required for this to work at runtime.
+`@/*` maps to `src/*`. Use `@/features/tasks` not `../../features/tasks`. The build pipeline runs `tsc && tsc-alias` to rewrite aliases in compiled output — do not use relative paths for cross-feature imports.
+
+### Database
+
+Prisma 7 with PostgreSQL. Schema at `prisma/schema.prisma`. Migrations at `prisma/migrations/`.
+
+`prisma.config.ts` at the project root configures the datasource for the CLI — it loads `.env` via `dotenv` and passes `DATABASE_URL` programmatically. The schema's `datasource` block only declares the provider (no `url` — that's a Prisma 7 change).
+
+The Prisma client is generated to `src/generated/prisma`.
+
+## Infrastructure
+
+### Docker
+
+- `docker-compose.yml` runs `postgres`, `redis`, and `app` services.
+- Local dev connects to Docker postgres on **port 5433** (`localhost:5433`) because a local PostgreSQL installation occupies port 5432.
+- Inside Docker the app connects via the internal service name `postgres:5432` — the compose `environment` block overrides `DATABASE_URL` for the container.
+- Redis is on the default port 6379 (no conflict).
+
+### Environment
+
+`.env` is never committed. `.env.example` documents all required keys. Variables are never read directly — always through `src/config/index.ts` which validates them with Zod at startup and exits immediately on any missing/invalid value.
+
+Key variables:
+```
+NODE_ENV=development
+PORT=3000
+DATABASE_URL=postgresql://postgres:password@localhost:5433/taskflow
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=<64-byte hex string>
+```
 
 ## Conventions
 
@@ -50,7 +85,19 @@ Controllers must not contain business logic. Services must not import from other
 - Use `??` over `||` for default values to avoid falsy-value bugs
 - Environment variables are never read directly — always through the validated config module in `src/config/`
 - The 404 catch-all handler in `app.ts` must remain the last middleware registered
+- Use `import { env } from "node:process"` instead of the `process` global — avoids relying on `@types/node` globals
+- Prisma schema field order: scalar fields first, then relations, then block attributes (`@@id`, `@@unique`, etc.)
+- `ignoreDeprecations: "6.0"` is set in `tsconfig.json` to silence TypeScript 6 deprecation errors for `moduleResolution: node` and `baseUrl`
+
+## Tooling
+
+- **ESLint** — flat config (`eslint.config.js`), TypeScript plugin, `globals.node` for Node.js globals, Prettier integration via `eslint-config-prettier`
+- **Prettier** — config at `.prettierrc`
+- **Husky** — pre-commit hook runs `lint-staged` (ESLint + Prettier on staged `.ts` files)
+- **pnpm-workspace.yaml** — `@prisma/engines` and `prisma` builds explicitly allowed
 
 ## Current phase
 
-**Phase 1 — Foundation.** Core Express setup and project structure complete. Next steps: environment config with Zod, structured logging with Pino, Docker + docker-compose, ESLint + Prettier + Husky.
+**Phase 1 — Complete.** Express foundation, Zod config, Pino logging, Docker, ESLint + Prettier + Husky, Prisma schema with initial migration all done.
+
+**Phase 2 — Next.** Authentication (JWT), user registration/login, workspace and project CRUD.
