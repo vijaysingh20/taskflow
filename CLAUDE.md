@@ -75,7 +75,10 @@ NODE_ENV=development
 PORT=3000
 DATABASE_URL=postgresql://postgres:password@localhost:5433/taskflow
 REDIS_URL=redis://localhost:6379
-JWT_SECRET=<64-byte hex string>
+JWT_ACCESS_SECRET=<64-byte hex string>
+JWT_REFRESH_SECRET=<64-byte hex string>
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
 ```
 
 ## Git
@@ -104,4 +107,8 @@ JWT_SECRET=<64-byte hex string>
 
 **Phase 1 — Complete.** Express foundation, Zod config, Pino logging, Docker, ESLint + Prettier + Husky, Prisma schema with initial migration all done.
 
-**Phase 2 — Next.** Authentication (JWT), user registration/login, workspace and project CRUD.
+**Phase 2 — Complete.** Database design — Prisma schema, migrations, connection management, graceful shutdown.
+
+**Phase 3 — Complete.** Auth — register, login, refresh, logout at `/api/v1/auth`. Access tokens (15m) + refresh tokens (7d) with rotation, stored in `RefreshToken` table. `authenticate` middleware attaches `req.user`. `AppError` + `errorHandler` for consistent error responses.
+
+**Phase 4 — Next.** Workspace and project CRUD.

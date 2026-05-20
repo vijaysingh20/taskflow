@@ -30,6 +30,7 @@ model User {
   ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
   assignedTasks   Task[]      @relation("TaskAssignee")
   workspaceMembers WorkspaceMember[]
+  refreshTokens RefreshToken[]
 }
 
 model Workspace {
@@ -103,4 +104,14 @@ model TaskLabel {
   createdAt DateTime @default(now())
 
   @@id([taskId, labelId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
