@@ -1,6 +1,7 @@
 import express, { Application, NextFunction, Request, Response } from 'express';
 import authRouter from './features/auth/auth.routes';
 import { errorHandler } from './shared/middleware/errorHandler';
+import workspaceRouter from './features/workspace/workspace.routes';
 
 const app: Application = express();
 
@@ -16,6 +17,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/workspaces', workspaceRouter);
 
 app.use((req: Request, res: Response, _next: NextFunction) => {
   res.status(404).json({
